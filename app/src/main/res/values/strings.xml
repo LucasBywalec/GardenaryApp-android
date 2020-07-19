@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Gardenary</string>
+    <string name="sign_in">Sign in</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="or">OR</string>
+    <string name="sign_in_with_facebook">Sign in with Facebook</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_with_apple">Sign in with Apple</string>
+    <string name="don_t_have_an_account_sign_up">Don\'t have an account? Sign up.</string>
+    <string name="sign_up">Sign up</string>
+    <string name="firstname">Firstname</string>
+    <string name="by_creating_an_account_you_agree_to_the_terms_of_use_and_privacy_policy">By creating an account you agree to the terms of use and privacy policy.</string>
+    <string name="already_have_an_account_sign_in">Already have an account? Sign in.</string>
+    <string name="already_a_user_sign_in">Already a user? Sign in</string>
+</resources>
