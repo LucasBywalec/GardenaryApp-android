@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;
@@ -29,9 +30,14 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import gardenary.app.databinding.ActivitySigninBinding;
 
@@ -40,15 +46,37 @@ public class SignInActivity extends AppCompatActivity {
 
     private static final String TAG = "SignInActivity";
 
-    private int signCount = 0;
-    ActivitySigninBinding binding;
+    private ActivitySigninBinding binding;
     private FirebaseAuth mAuth;
     private FirebaseFirestore database = FirebaseFirestore.getInstance();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        //create binding
+        binding = ActivitySigninBinding.inflate((getLayoutInflater()));
+        View view = binding.getRoot();
+        setContentView(view);
+
+        //get firebase
+        mAuth = FirebaseAuth.getInstance();
+
+
+        //TODO factor
+        styleAllText();
+
+        binding.ButtonSignIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SignIn();
+            }
+        });
+    }
 
     private void styleAllText(){
 
         TextView textSignUp = binding.TextDontHaveAccount;
-        //findViewById działa podobnie jak GetElement w js. Jednak argument passujący to klasa R, która łączy XMl z plikami .java
 
         String text = "Don’t have an account? Sign up.";
         SpannableString spannableSignUp = new SpannableString(text);
@@ -82,14 +110,13 @@ public class SignInActivity extends AppCompatActivity {
     }
 
     private void SignIn(){
-        EditText email = binding.EditTextEmail;
-        EditText password = binding.EditTextPassword;
+        final String email = binding.EditTextEmail.getText().toString();
+        String password = binding.EditTextPassword.getText().toString();
 
-        Log.d(TAG, "Informations passed");
+        Log.d(TAG, "Information passed");
 
-        getUserInfo(email.getText().toString());
 
-        mAuth.signInWithEmailAndPassword(email.getText().toString(), password.getText().toString())
+        mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
@@ -97,18 +124,14 @@ public class SignInActivity extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             Log.d(TAG, "signInWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
-                            //updateUI(user); TODO
 
-                            Intent goTo = new Intent(SignInActivity.this, MainProfileActivity.class);
-                            startActivity(goTo);
+                            collectUserData(email);
 
                         } else {
                             // If sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
                             Toast.makeText(getApplicationContext(), "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
-                            //updateUI(null); TODO
-                            // ...
                         }
 
                         // ...
@@ -116,46 +139,32 @@ public class SignInActivity extends AppCompatActivity {
                 });
     }
 
-    private void getUserInfo(String email) {
-        /*
-        database.collection("users")
-                .whereEqualTo("email", email)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        Log.d(TAG, "getUserInfo");
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.d(TAG, "User Info Is " + document.getData());
-                            }
-                        } else {
-                            Log.d(TAG, "Error getting documents: ", task.getException());
-                        }
-                    }
-                });
-                */
+    private void collectUserData(String email) {
+        database.collection("users").document(email)
+                .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
 
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        //setContentView(R.layout.activity_signin);
-
-        mAuth = FirebaseAuth.getInstance();
-
-        binding = ActivitySigninBinding.inflate((getLayoutInflater()));
-        View view = binding.getRoot();
-        setContentView(view);
-
-        styleAllText();
-
-        binding.ButtonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                SignIn();
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        Log.d(TAG, "DocumentSnapshot data in fucking string " + document.getData().toString());
+
+                        Intent goTo = new Intent(SignInActivity.this, MainProfileActivity.class);
+
+                        Bundle extras = new Bundle();
+                        extras.putSerializable("user", (HashMap)document.getData());
+                        goTo.putExtras(extras);
+                        //goTo.putExtra("user", (Parcelable) document.getData());
+                        startActivity(goTo);
+                    } else {
+                        Log.d(TAG, "No such document");
+                    }
+                } else {
+                    Log.d(TAG, "get failed with", task.getException());
+                }
             }
         });
     }
+
 }

@@ -167,9 +167,9 @@ public class SignUpActivity extends AppCompatActivity {
     private void sendUserDataToDatabase(String firstname, String email) {
         //getInstance jest wymagane, natomiast gerReference jest odwołaniem do odpowiedniego pliku
         Timestamp today = new Timestamp(System.currentTimeMillis());
-        UserHandler user = new UserHandler(firstname, email, today);
+        UserHandler user = new UserHandler(firstname, today);
 
-        database.collection("users").add(user);
+        database.collection("users").document(email).set(user);
 
         Log.d(TAG, "Finish");
     }
